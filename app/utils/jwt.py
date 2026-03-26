@@ -17,9 +17,10 @@ def create_token(user_id: str, expires_in_seconds: int = None):
 
     payload = {
         "sub": user_id,
-        "exp": datetime.now(timezone.utc) + timedelta(seconds=expires_in_seconds)
+        "exp": datetime.now(timezone.utc) + timedelta(seconds=expires_in_seconds),
     }
     return pyjwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
+
 
 def decode_token(token: str) -> dict:
     try:
