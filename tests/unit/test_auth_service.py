@@ -1,8 +1,7 @@
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from app.services.auth_service import (
     AuthService,
-    EmailAlreadyExistsError,
     InvalidCredentialsError,
     InactiveUserError,
 )
@@ -68,6 +67,7 @@ async def test_register_hashes_password(auth_service, mock_user_repo):
 
 # ----------- Тесты регистрации -----------
 
+
 async def test_return_token_if_login_success(auth_service, mock_user_repo):
     user = MagicMock()
     user.id = "some_user_uuid"
@@ -75,9 +75,12 @@ async def test_return_token_if_login_success(auth_service, mock_user_repo):
     user.hashed_password = hash_password("login_success_pass123")
     mock_user_repo.get_by_email.return_value = user
 
-    token = await auth_service.login(email="success@mail.ru", password="login_success_pass123")
+    token = await auth_service.login(
+        email="success@mail.ru", password="login_success_pass123"
+    )
     assert token is not None
     assert isinstance(token, str)
+
 
 async def test_raises_error_if_wrong_password(auth_service, mock_user_repo):
     user = MagicMock()
@@ -89,6 +92,7 @@ async def test_raises_error_if_wrong_password(auth_service, mock_user_repo):
     with pytest.raises(InvalidCredentialsError):
         await auth_service.login(email="fail@mail.ru", password="wrong_pass123")
 
+
 async def test_raises_error_if_login_inactive_user(auth_service, mock_user_repo):
     user = MagicMock()
     user.is_active = False
@@ -96,7 +100,10 @@ async def test_raises_error_if_login_inactive_user(auth_service, mock_user_repo)
     mock_user_repo.get_by_email.return_value = user
 
     with pytest.raises(InactiveUserError):
-        await auth_service.login(email="deleted_user@mail.ru", password="deleted_user_pass123")
+        await auth_service.login(
+            email="deleted_user@mail.ru", password="deleted_user_pass123"
+        )
+
 
 async def test_raises_error_if_nonexists_user(auth_service, mock_user_repo):
     mock_user_repo.get_by_email.return_value = None

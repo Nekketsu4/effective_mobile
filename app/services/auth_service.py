@@ -21,22 +21,22 @@ class InactiveUserError(Exception):
 
 class AuthService:
     def __init__(
-            self,
-            user_repo: UserRepository,
-            session_repo: SessionRepository,
-            role_repo: RoleRepository
+        self,
+        user_repo: UserRepository,
+        session_repo: SessionRepository,
+        role_repo: RoleRepository,
     ):
         self.user_repo = user_repo
         self.session_repo = session_repo
         self.role_repo = role_repo
 
     async def register(
-            self,
-            email: str,
-            password: str,
-            first_name: str,
-            last_name: str,
-            middle_name: str | None = None
+        self,
+        email: str,
+        password: str,
+        first_name: str,
+        last_name: str,
+        middle_name: str | None = None,
     ):
         existing = await self.user_repo.get_by_email(email)
         if existing:
@@ -50,7 +50,7 @@ class AuthService:
             first_name=first_name,
             last_name=last_name,
             middle_name=middle_name,
-            role_id=default_role.id
+            role_id=default_role.id,
         )
         return user
 
@@ -68,7 +68,7 @@ class AuthService:
         await self.session_repo.create(
             user_id=user.id,
             token=token,
-            expires_at=datetime.utcnow() + timedelta(hours=1)
+            expires_at=datetime.utcnow() + timedelta(hours=1),
         )
 
         return token

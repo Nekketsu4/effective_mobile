@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from app.repositories.session_repo import SessionRepository
 from app.repositories.user_repo import UserRepository
