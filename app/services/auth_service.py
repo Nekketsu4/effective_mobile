@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, timedelta
 
 from app.repositories.user_repo import UserRepository
@@ -72,3 +73,10 @@ class AuthService:
         )
 
         return token
+
+    async def logout(self, user_id: uuid.UUID) -> None:
+        """
+        Логаут -> удаляем все сессии пользователя
+        Токены этого пользователя становятся невалидными
+        """
+        await self.session_repo.delete_by_user_id(user_id)
