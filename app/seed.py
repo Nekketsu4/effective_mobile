@@ -2,27 +2,51 @@ import asyncio
 
 from app.database import AsyncSessionLocal
 from app.models.user import User
-from app.models.role import Role
+from app.models.role import Role, RoleName
 from app.models.access_rule import AccessRule
-from app.models.business_element import BusinessElement
+from app.models.business_element import BusinessElement, BusinessElementName
 from app.utils.password import hash_password
 
 
 async def seed():
     async with AsyncSessionLocal() as db:
         #  Роли
-        admin_role = Role(name="admin", description="Полный доступ")
-        manager_role = Role(name="manager", description="Управление ресурсами")
-        user_role = Role(name="user", description="Базовый доступ")
-        guest_role = Role(name="guest", description="Только чтение")
+        admin_role = Role(
+            name=RoleName.ADMIN,
+            description="Админ (Полный доступ)"
+        )
+        manager_role = Role(
+            name=RoleName.MANAGER,
+            description="Управляющий (Управление ресурсами)"
+        )
+        user_role = Role(
+            name=RoleName.USER,
+            description="Пользователь (Базовый доступ)"
+        )
+        guest_role = Role(
+            name=RoleName.GUEST,
+            description="Гость (Только чтение)"
+        )
         db.add_all([admin_role, manager_role, user_role, guest_role])
         await db.flush()
 
         # Бизнес объекты
-        products = BusinessElement(name="products", description="Товары")
-        orders = BusinessElement(name="orders", description="Заказы")
-        users_el = BusinessElement(name="users", description="Пользователи")
-        rules_el = BusinessElement(name="rules", description="Правила доступа")
+        products = BusinessElement(
+            name=BusinessElementName.PRODUCTS,
+            description="Товары"
+        )
+        orders = BusinessElement(
+            name=BusinessElementName.ORDERS,
+            description="Заказы"
+        )
+        users_el = BusinessElement(
+            name=BusinessElementName.USERS,
+            description="Пользователи"
+        )
+        rules_el = BusinessElement(
+            name=BusinessElementName.ACCESS_RULES,
+            description="Правила доступа"
+        )
         db.add_all([products, orders, users_el, rules_el])
         await db.flush()
 
