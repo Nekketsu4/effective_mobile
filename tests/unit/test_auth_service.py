@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from app.services.auth_service import (
@@ -110,3 +112,8 @@ async def test_raises_error_if_nonexists_user(auth_service, mock_user_repo):
 
     with pytest.raises(InvalidCredentialsError):
         await auth_service.login("nonexist@mail.ru", password="nonexist_pass123")
+
+async def test_delete_sessions_if_logout(auth_service, mock_session_repo):
+    user_id = uuid.uuid4()
+    await auth_service.logout(user_id)
+    mock_session_repo.delete_by_user_id.assert_called_once_with(user_id)
