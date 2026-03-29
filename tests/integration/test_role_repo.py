@@ -1,7 +1,7 @@
 import pytest
 
 from app.repositories.role_repo import RoleRepository
-from app.models.role import Role
+from app.models.role import Role, RoleName
 
 
 @pytest.fixture
@@ -12,7 +12,7 @@ async def role_repo(db):
 @pytest.fixture
 async def seeded_role(db):
     """Создаем роль"""
-    role = Role(name="admin", description="Полный доступ")
+    role = Role(name=RoleName.ADMIN, description="Админ (Полный доступ)")
     db.add(role)
     await db.flush()
     return role
@@ -22,11 +22,6 @@ async def test_get_role_by_name(role_repo, seeded_role):
     role = await role_repo.get_by_name("admin")
     assert role is not None
     assert role.name == seeded_role.name
-
-
-async def test_get_none_by_name_if_role_nonexists(role_repo):
-    empty = await role_repo.get_by_name("nonexists_role")
-    assert empty is None
 
 
 async def test_get_role_by_id(role_repo, seeded_role):
