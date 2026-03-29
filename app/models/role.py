@@ -30,7 +30,7 @@ class Role(Base):
             create_type=True,
         ),
         nullable=False,
-        unique=True
+        unique=True,
     )
     description: Mapped[str | None] = mapped_column(Text)
 

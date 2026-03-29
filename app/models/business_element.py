@@ -13,7 +13,6 @@ if TYPE_CHECKING:
 
 
 class BusinessElementName(str, enum.Enum):
-
     PRODUCTS = "products"
     ORDERS = "orders"
     USERS = "users"
@@ -25,11 +24,7 @@ class BusinessElement(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(
-        SAEnum(
-            BusinessElementName,
-            name="business_element_name",
-            create_type=True
-        ),
+        SAEnum(BusinessElementName, name="business_element_name", create_type=True),
         unique=True,
         nullable=False,
     )

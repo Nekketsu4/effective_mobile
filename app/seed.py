@@ -11,41 +11,27 @@ from app.utils.password import hash_password
 async def seed():
     async with AsyncSessionLocal() as db:
         #  Роли
-        admin_role = Role(
-            name=RoleName.ADMIN,
-            description="Админ (Полный доступ)"
-        )
+        admin_role = Role(name=RoleName.ADMIN, description="Админ (Полный доступ)")
         manager_role = Role(
-            name=RoleName.MANAGER,
-            description="Управляющий (Управление ресурсами)"
+            name=RoleName.MANAGER, description="Управляющий (Управление ресурсами)"
         )
         user_role = Role(
-            name=RoleName.USER,
-            description="Пользователь (Базовый доступ)"
+            name=RoleName.USER, description="Пользователь (Базовый доступ)"
         )
-        guest_role = Role(
-            name=RoleName.GUEST,
-            description="Гость (Только чтение)"
-        )
+        guest_role = Role(name=RoleName.GUEST, description="Гость (Только чтение)")
         db.add_all([admin_role, manager_role, user_role, guest_role])
         await db.flush()
 
         # Бизнес объекты
         products = BusinessElement(
-            name=BusinessElementName.PRODUCTS,
-            description="Товары"
+            name=BusinessElementName.PRODUCTS, description="Товары"
         )
-        orders = BusinessElement(
-            name=BusinessElementName.ORDERS,
-            description="Заказы"
-        )
+        orders = BusinessElement(name=BusinessElementName.ORDERS, description="Заказы")
         users_el = BusinessElement(
-            name=BusinessElementName.USERS,
-            description="Пользователи"
+            name=BusinessElementName.USERS, description="Пользователи"
         )
         rules_el = BusinessElement(
-            name=BusinessElementName.ACCESS_RULES,
-            description="Правила доступа"
+            name=BusinessElementName.ACCESS_RULES, description="Правила доступа"
         )
         db.add_all([products, orders, users_el, rules_el])
         await db.flush()
