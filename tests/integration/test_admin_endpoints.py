@@ -10,11 +10,8 @@ from app.api.v1.admin import get_access_service
 
 from app.models.business_element import BusinessElementName
 from app.models.role import RoleName
-from app.services.access_service import (
-    CannotModifyAdminError,
-    RuleAlreadyExistsError,
-    RuleNotFoundError,
-)
+from app.services.access_service import RuleAlreadyExistsError, RuleNotFoundError
+from app.services.user_management_service import CannotModifyAdminError
 
 
 def make_admin():
