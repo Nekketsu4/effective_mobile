@@ -89,3 +89,12 @@ class AccessService:
         if not role:
             raise RuleNotFoundError("Роль не найдена")
         return await self.access_repo.get_rules_by_role(role_id)
+
+    async def get_rule_by_id(self, rule_id: uuid.UUID):
+        rule = await self.access_repo.get_by_id(rule_id)
+        if not rule:
+            raise RuleNotFoundError("Правило не найдено")
+        return rule
+
+    async def get_all_roles(self):
+        return await self.role_repo.get_all()
