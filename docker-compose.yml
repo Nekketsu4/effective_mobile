@@ -1,14 +1,17 @@
 services:
   db:
     image: postgres:16
-    environment:
-      POSTGRES_USER: appuser
-      POSTGRES_PASSWORD: apppass
-      POSTGRES_DB: authdb
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U appuser -d authdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   db_test:
     image: postgres:16
@@ -17,7 +20,18 @@ services:
       POSTGRES_PASSWORD: apppass
       POSTGRES_DB: testdb
     ports:
-      - "5433:5432"  # другой порт, чтобы не конфликтовать
+      - "5433:5432"
+
+  api:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
 
 volumes:
-  pgdata:
+  postgres_data:
