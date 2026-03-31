@@ -2,7 +2,7 @@ from typing import AsyncGenerator
 
 import pytest
 
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from app.models.base import Base
 from app.config import settings
@@ -28,8 +28,9 @@ async def setup_db(test_engine):
 @pytest.fixture
 async def db(test_engine) -> AsyncGenerator[AsyncSession, None]:
     # каждый тест получает свою транзакцию, которая откатывается после теста
-    session_factory = async_sessionmaker(
-        test_engine, expire_on_commit=False, class_=AsyncSession
-    )
-    async with session_factory() as session:
+    async with test_engine.connect() as conn:
+        await conn.begin()
+        session = AsyncSession(bind=conn, expire_on_commit=False)
         yield session
+        await session.close()
+        await conn.rollback()
