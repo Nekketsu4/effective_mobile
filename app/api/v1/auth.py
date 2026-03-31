@@ -6,6 +6,7 @@ from app.schemas.auth_schemas import (
     LoginRequest,
     TokenResponse,
     UserResponse,
+    UserUpdateRequest,
 )
 from app.services.auth_service import (
     AuthService,
@@ -75,3 +76,31 @@ async def get_me(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+async def update_profile(
+    body: UserUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    service: AuthService = Depends(get_auth_service),
+):
+    """Обновление профиля текущего пользователя."""
+    updates = body.model_dump(exclude_unset=True)
+    return await service.update_profile(current_user.id, **updates)
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    current_user: User = Depends(get_current_user),
+    service: AuthService = Depends(get_auth_service),
+):
+    """
+    Мягкое удаление аккаунта текущего пользователя.
+
+    Два действия в одной операции:
+    1. Разлогиниваем — удаляем все сессии (пользователь больше не может войти
+       даже если знает пароль, пока is_active=False)
+    2. Деактивируем — ставим is_active=False
+    """
+    await service.logout(user_id=current_user.id)
+    await service.soft_delete(user_id=current_user.id)
