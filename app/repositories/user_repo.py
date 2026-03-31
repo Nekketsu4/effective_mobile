@@ -40,9 +40,7 @@ class UserRepository(BaseRepository):
         запросом при первом обращении к user.role.
         """
         result = await self.db.execute(
-            select(User)
-            .options(joinedload(User.role))
-            .where(User.id == entity_id)
+            select(User).options(joinedload(User.role)).where(User.id == entity_id)
         )
         return result.scalar_one_or_none()
 
@@ -64,3 +62,8 @@ class UserRepository(BaseRepository):
             setattr(user, key, value)
         await self.db.flush()
         return user
+
+    async def get_all(self) -> list[User]:
+        """Загружаем всех пользователей сразу"""
+        result = await self.db.execute(select(User).options(joinedload(User.role)))
+        return list(result.scalars().all())
