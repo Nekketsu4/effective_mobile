@@ -1,5 +1,5 @@
 import pytest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.repositories.session_repo import SessionRepository
 from app.repositories.user_repo import UserRepository
@@ -34,7 +34,7 @@ async def test_create_session(session_repo, user):
     session = await session_repo.create(
         user_id=user.id,
         token="some.jwt.token",
-        expires_at=datetime.utcnow() + timedelta(hours=1),
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
     )
     assert session.id is not None
     assert session.token == "some.jwt.token"
@@ -45,7 +45,7 @@ async def get_session_by_token(session_repo, user):
     await session_repo.create(
         user_id=user.id,
         token="some_1.jwt.token",
-        expires_at=datetime.utcnow() + timedelta(hours=1),
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
     )
     found_session = await session_repo.get_by_token("some_1.jwt.token")
     assert found_session is not None
@@ -62,12 +62,12 @@ async def test_remove_sessions_delete_by_user_id(session_repo, user):
     await session_repo.create(
         user_id=user.id,
         token="device_1.jwt.token",
-        expires_at=datetime.utcnow() + timedelta(hours=1),
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
     )
     await session_repo.create(
         user_id=user.id,
         token="device_2.jwt.token",
-        expires_at=datetime.utcnow() + timedelta(hours=1),
+        expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
     )
 
     await session_repo.delete_by_user_id(user.id)
@@ -82,7 +82,7 @@ async def test_returns_none_if_session_expired(session_repo, user):
     await session_repo.create(
         user_id=user.id,
         token="expired.jwt.token",
-        expires_at=datetime.utcnow() - timedelta(hours=1),
+        expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
     )
     expired_token = await session_repo.get_by_token("expired.jwt.token")
     assert expired_token is None
