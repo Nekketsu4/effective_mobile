@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.repositories.user_repo import UserRepository
 from app.schemas.access_rule_schemas import (
     AccessRuleCreate,
     AccessRuleUpdate,
@@ -20,6 +21,15 @@ from app.repositories.access_rule_repo import AccessRuleRepository
 from app.repositories.role_repo import RoleRepository
 from app.repositories.business_element_repo import BusinessElementRepository
 from app.dependencies import require_admin
+from app.services.user_management_service import (
+    UserManagementService,
+    UserNotFoundError,
+    RoleNotFoundError,
+    CannotModifyAdminError,
+    CannotDeleteSelfError,
+)
+from app.schemas.auth_schemas import UserWithRoleResponse, AssignRoleRequest
+from app.models.user import User
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -134,4 +144,93 @@ async def delete_rule(
     except CannotModifyAdminError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except RuleNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+# ==================== Управление пользователями ====================
+
+
+def get_user_management_service(
+    db: AsyncSession = Depends(get_db),
+) -> UserManagementService:
+    """
+    Фабрика сервиса управления пользователями.
+    Отдельная от get_access_service — другой сервис, другие зависимости.
+    """
+    return UserManagementService(
+        user_repo=UserRepository(db),
+        role_repo=RoleRepository(db),
+    )
+
+
+@router.get("/users", response_model=list[UserWithRoleResponse])
+async def get_all_users(
+    _=Depends(require_admin),
+    service: UserManagementService = Depends(get_user_management_service),
+):
+    """Список всех пользователей системы с их ролями."""
+    users = await service.get_all_users()
+    return [UserWithRoleResponse.from_user(u) for u in users]
+
+
+@router.get("/users/{user_id}", response_model=UserWithRoleResponse)
+async def get_user(
+    user_id: uuid.UUID,
+    _=Depends(require_admin),
+    service: UserManagementService = Depends(get_user_management_service),
+):
+    """Получить конкретного пользователя по id."""
+    try:
+        user = await service.get_user_by_id(user_id)
+        return UserWithRoleResponse.from_user(user)
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.patch("/users/{user_id}/role", response_model=UserWithRoleResponse)
+async def assign_role(
+    user_id: uuid.UUID,
+    body: AssignRoleRequest,
+    _=Depends(require_admin),
+    service: UserManagementService = Depends(get_user_management_service),
+):
+    """
+    Назначить роль пользователю.
+    Нельзя изменить роль администратору и нельзя назначить несуществующую роль.
+    """
+    try:
+        user = await service.assign_role(
+            target_user_id=user_id,
+            role_id=body.role_id,
+        )
+        return UserWithRoleResponse.from_user(user)
+    except CannotModifyAdminError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except RoleNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except UserNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    user_id: uuid.UUID,
+    _=Depends(require_admin),
+    current_user: User = Depends(require_admin),
+    service: UserManagementService = Depends(get_user_management_service),
+):
+    """
+    Мягкое удаление пользователя администратором.
+    Нельзя удалить самого себя и нельзя удалить другого администратора.
+    """
+    try:
+        await service.delete_user(
+            target_user_id=user_id,
+            current_user_id=current_user.id,
+        )
+    except CannotDeleteSelfError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except CannotModifyAdminError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except UserNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
