@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.repositories.user_repo import UserRepository
 from app.repositories.session_repo import SessionRepository
@@ -69,7 +69,7 @@ class AuthService:
         await self.session_repo.create(
             user_id=user.id,
             token=token,
-            expires_at=datetime.utcnow() + timedelta(hours=1),
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
         )
 
         return token
@@ -80,3 +80,14 @@ class AuthService:
         Токены этого пользователя становятся невалидными
         """
         await self.session_repo.delete_by_user_id(user_id)
+
+    async def soft_delete(self, user_id: uuid.UUID) -> None:
+        """
+        Мягкое удаление — ставим is_active=False.
+        Запись в БД остаётся, пользователь просто не может войти.
+        """
+        await self.user_repo.soft_delete(user_id)
+
+    async def update_profile(self, user_id: uuid.UUID, **kwargs):
+        """Обновление профиля пользователя."""
+        return await self.user_repo.update(user_id, **kwargs)
