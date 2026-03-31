@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import delete, select
 
@@ -22,7 +22,7 @@ class SessionRepository(BaseRepository):
         """Ищем сессию по токену и сразу отсеиваем истекшие токены"""
         session = await self.db.execute(
             select(Session).where(
-                Session.token == token, Session.expires_at > datetime.utcnow()
+                Session.token == token, Session.expires_at > datetime.now(timezone.utc)
             )
         )
         return session.scalar_one_or_none()
