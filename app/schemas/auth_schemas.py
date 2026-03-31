@@ -1,3 +1,5 @@
+import uuid
+
 from pydantic import BaseModel, EmailStr, field_validator
 
 
@@ -28,7 +30,7 @@ class TokenResponse(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: str
+    id: uuid.UUID
     email: str
     first_name: str
     last_name: str
@@ -36,3 +38,11 @@ class UserResponse(BaseModel):
     is_active: bool
 
     model_config = {"from_attributes": True}
+
+
+class UserUpdateRequest(BaseModel):
+    """Схема для PATCH /auth/me — обновление профиля."""
+
+    first_name: str | None = None
+    last_name: str | None = None
+    middle_name: str | None = None
